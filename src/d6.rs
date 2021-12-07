@@ -37,7 +37,6 @@ pub fn run() -> String {
     let mut world = [0 as u64;9];
     let inp = read_inp(6,false);
     init_world(&inp, &mut world);
-    println!("fish world:{:?}", world);
     let mut times = 80;
     while times > 0 {
         sim(&mut world);
