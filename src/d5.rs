@@ -104,14 +104,6 @@ impl Board {
         }
     }
 
-    fn str(&self) -> String {
-        let mut ret = "".to_owned();
-        for i in self.dat.iter() {
-            ret.push_str(&format!("{:?}\n", i).to_owned());
-        }
-        ret.to_string()
-    }
-
     fn count_dangers(&self) -> u32 {
         let mut num = 0;
         for (_i, c) in self.dat.iter().enumerate() {
