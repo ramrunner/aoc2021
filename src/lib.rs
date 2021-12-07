@@ -2,12 +2,15 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+// i suspect that when i learn about macros
+// this sillyness of adding the fn and mods will stop
 mod d1;
 mod d2;
 mod d3;
 mod d4;
 mod d5;
 mod d6;
+mod d7;
 
 pub struct Days {
     pub solution: [fn() -> String; 26],
@@ -23,6 +26,7 @@ pub fn make_days() -> Days {
     ret.solution[4] = d4::run;
     ret.solution[5] = d5::run;
     ret.solution[6] = d6::run;
+    ret.solution[7] = d7::run;
     ret
 }
 
