@@ -45,13 +45,13 @@ pub fn run() -> String {
     let allpos = num_of_positions(&ipos);
     let fuel_per_pos = calc_fuel(&ipos, allpos, false);
     ansa = format!(
-        "[a] 3 best consumpotion and positions: {:?}",
+        "[a] 3 best consumptions and positions: {:?}",
         get_n_best(3, &fuel_per_pos)
     );
     // part b
     let fuel_per_pos = calc_fuel(&ipos, allpos, true);
     ansb = format!(
-        "[b] 3 best consumpotion and positions: {:?}",
+        "[b] 3 best consumptions and positions: {:?}",
         get_n_best(3, &fuel_per_pos)
     );
 
