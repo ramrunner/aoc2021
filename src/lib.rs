@@ -13,6 +13,7 @@ mod d6;
 mod d7;
 mod d8;
 mod d9;
+mod d10;
 
 pub struct Days {
     pub solution: [fn() -> String; 26],
@@ -31,6 +32,7 @@ pub fn make_days() -> Days {
     ret.solution[7] = d7::run;
     ret.solution[8] = d8::run;
     ret.solution[9] = d9::run;
+    ret.solution[10] = d10::run;
     ret
 }
 
