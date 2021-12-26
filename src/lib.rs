@@ -5,6 +5,8 @@ use std::io::{BufRead, BufReader};
 // i suspect that when i learn about macros
 // this sillyness of adding the fn and mods will stop
 mod d1;
+mod d10;
+mod d11;
 mod d2;
 mod d3;
 mod d4;
@@ -13,7 +15,6 @@ mod d6;
 mod d7;
 mod d8;
 mod d9;
-mod d10;
 
 pub struct Days {
     pub solution: [fn() -> String; 26],
@@ -33,6 +34,7 @@ pub fn make_days() -> Days {
     ret.solution[8] = d8::run;
     ret.solution[9] = d9::run;
     ret.solution[10] = d10::run;
+    ret.solution[11] = d11::run;
     ret
 }
 
