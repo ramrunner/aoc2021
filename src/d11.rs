@@ -36,7 +36,7 @@ fn incnot0(b: &mut [[u8; 12]; 12], i: usize, j: usize) {
     }
 }
 pub fn run() -> String {
-    let mut ans : String = "".to_string();
+    let mut ans: String = "".to_string();
     let mut board: [[u8; 12]; 12] = [[0; 12]; 12];
     let mut time = 0;
     let mut i = 0;
