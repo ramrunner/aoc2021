@@ -8,6 +8,7 @@ mod d1;
 mod d10;
 mod d11;
 mod d12;
+mod d13;
 mod d2;
 mod d3;
 mod d4;
@@ -37,6 +38,7 @@ pub fn make_days() -> Days {
     ret.solution[10] = d10::run;
     ret.solution[11] = d11::run;
     ret.solution[12] = d12::run;
+    ret.solution[13] = d13::run;
     ret
 }
 

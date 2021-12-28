@@ -109,7 +109,7 @@ impl Graph {
                         if self.nodes[*l as usize].is_tiny {
                             path.push(*l);
                         }
-                        
+
                         let next = Step {
                             c: *l,
                             p: path,
@@ -152,9 +152,14 @@ pub fn run() -> String {
     let end = graph.node_ind_by_name("end");
     let allp1 = graph.bfs(start, end, false);
     let allp2 = graph.bfs(start, end, true);
-    ans.push_str(&format!("[a] visiting small caves once: {} total paths\n", allp1.len()));
-    ans.push_str(&format!("[b] visiting one small cave twice: {} total paths\n", allp2.len()));
+    ans.push_str(&format!(
+        "[a] visiting small caves once: {} total paths\n",
+        allp1.len()
+    ));
+    ans.push_str(&format!(
+        "[b] visiting one small cave twice: {} total paths\n",
+        allp2.len()
+    ));
 
-    
     ans.to_string()
 }
