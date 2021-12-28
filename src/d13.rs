@@ -2,7 +2,7 @@ use crate::read_inp;
 use std::cmp;
 use std::iter;
 
-fn largestDims(a: &[(u32, u32)]) -> (u32, u32) {
+fn largest_dims(a: &[(u32, u32)]) -> (u32, u32) {
     let mut xmax = 0;
     let mut ymax = 0;
     for (ia, ib) in a {
@@ -12,19 +12,19 @@ fn largestDims(a: &[(u32, u32)]) -> (u32, u32) {
     (xmax + 1, ymax + 1)
 }
 
-fn tagPoints(points: &[(u32, u32)], bm: &mut [bool], lp: u32) {
+fn tag_points(points: &[(u32, u32)], bm: &mut [bool], lp: u32) {
     for (px, py) in points {
         let ind = ((*py) * lp + (*px)) as usize;
         bm[ind] = true;
     }
 }
 
-fn hfold(a: &[bool], at: usize, elemPerRow: usize) -> Vec<bool> {
+fn hfold(a: &[bool], at: usize, elem_per_row: usize) -> Vec<bool> {
     let mut ret = Vec::new();
-    let l1 = &a[..((at - 1) * elemPerRow as usize)];
-    let l2 = &a[((at + 1) * elemPerRow as usize)..];
+    let l1 = &a[..((at - 1) * elem_per_row as usize)];
+    let l2 = &a[((at + 1) * elem_per_row as usize)..];
     let l3v = l2
-        .chunks(elemPerRow)
+        .chunks(elem_per_row)
         .collect::<Vec<_>>()
         .into_iter()
         .rev()
@@ -44,14 +44,14 @@ fn hfold(a: &[bool], at: usize, elemPerRow: usize) -> Vec<bool> {
     ret
 }
 
-fn vfold(a: &[bool], at: usize, elemPerRow: usize) -> Vec<bool> {
+fn vfold(a: &[bool], at: usize, elem_per_row: usize) -> Vec<bool> {
     let mut ret = Vec::new();
-    let nlines = a.len() / elemPerRow;
+    let nlines = a.len() / elem_per_row;
     for il in 0..nlines {
-        let ind1 = il * elemPerRow;
-        let ind2 = il * elemPerRow + (at);
+        let ind1 = il * elem_per_row;
+        let ind2 = il * elem_per_row + (at);
         let ind3 = ind2 + 1;
-        let ind4 = (il + 1) * elemPerRow;
+        let ind4 = (il + 1) * elem_per_row;
         let l1 = &a[ind1..ind2];
         let l2 = a[ind3..ind4]
             .to_vec()
@@ -59,14 +59,6 @@ fn vfold(a: &[bool], at: usize, elemPerRow: usize) -> Vec<bool> {
             .rev()
             .collect::<Vec<bool>>();
         let l3 = l2.as_slice();
-        let cl1 = l1
-            .iter()
-            .map(|x| if *x { '#' } else { '.' })
-            .collect::<Vec<char>>();
-        let cl3 = l3
-            .iter()
-            .map(|x| if *x { '#' } else { '.' })
-            .collect::<Vec<char>>();
 
         let (blist, slist) = if l1.len() >= l3.len() {
             (l1, l3)
@@ -91,7 +83,6 @@ fn count_pixels(a: &[bool]) -> u32 {
 }
 
 fn print(a: &[bool], epr: u32) {
-    let mut lines = 0;
     let llen = a.len();
     for lines in 0..(llen / epr as usize) {
         let i1 = lines * epr as usize;
@@ -109,7 +100,6 @@ pub fn run() -> String {
     let mut ans = "".to_string();
     let inp = read_inp(13, false);
     let mut intpoints = Vec::<(u32, u32)>::new();
-    let points = Vec::<bool>::new();
     let mut parse_points_done = false;
     let mut lp: (u32, u32) = (0, 0);
     let mut bmap: Vec<bool> = vec![];
@@ -122,9 +112,9 @@ pub fn run() -> String {
         if l == "" {
             // once we read all the points , before the folds
             parse_points_done = true;
-            lp = largestDims(&intpoints);
+            lp = largest_dims(&intpoints);
             bmap = vec![false; ((lp.0) * (lp.1)).try_into().unwrap()];
-            tagPoints(&intpoints, &mut bmap, lp.0);
+            tag_points(&intpoints, &mut bmap, lp.0);
             epr = lp.0;
             continue;
         }
