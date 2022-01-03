@@ -2,9 +2,6 @@ use crate::read_inp;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
-// static node id counter
-static mut nid: u32 = 0;
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 struct Node {
     id: u32,
@@ -29,7 +26,6 @@ struct Step {
 impl Graph {
     // returns the index/id of the node
     fn register_node(&mut self, name: String) -> usize {
-        let found = false;
         for (ind, n) in self.names.iter().enumerate() {
             if *n == name {
                 return ind;
@@ -60,7 +56,7 @@ impl Graph {
         let ib = self.register_node(b) as u32;
 
         if self.g.contains_key(&ia) {
-            let mut links = self.g.get_mut(&ia).unwrap();
+            let links = self.g.get_mut(&ia).unwrap();
             links.push(ib);
             //println!("{:?} connects to {:?}",self.nodes[ia as usize], links);
         } else {
@@ -68,7 +64,7 @@ impl Graph {
         }
     }
 
-    fn newGraph() -> Graph {
+    fn new_graph() -> Graph {
         Graph {
             g: HashMap::new(),
             nodes: Vec::new(),
@@ -86,7 +82,6 @@ impl Graph {
     fn bfs_helper(&self, from: &u32, to: u32, allpaths: &mut Vec<Vec<u32>>, dotwice: bool) {
         let starti = self.node_ind_by_name("start");
         let endi = self.node_ind_by_name("end");
-        let mut count = 0;
         let first = Step {
             c: *from,
             p: vec![*from],
@@ -97,7 +92,6 @@ impl Graph {
         while queue.len() > 0 {
             let curr = queue.pop_front().unwrap();
             if curr.c == to {
-                count += 1;
                 allpaths.push(curr.p);
                 continue;
             }
@@ -142,8 +136,8 @@ fn seen(a: u32, b: Vec<u32>) -> bool {
 pub fn run() -> String {
     let mut ans: String = "".to_string();
     let inp = read_inp(12, false);
-    let mut graph: Graph = Graph::newGraph();
-    for (il, l) in inp.lines().enumerate() {
+    let mut graph: Graph = Graph::new_graph();
+    for l in inp.lines() {
         let p = l.split("-").collect::<Vec<&str>>();
         graph.connect(p[0].to_string(), p[1].to_string());
         graph.connect(p[1].to_string(), p[0].to_string());

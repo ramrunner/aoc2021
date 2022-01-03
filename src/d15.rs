@@ -135,9 +135,9 @@ impl Board {
     }
     // performs an A* search and returns the total cost
     // of the best path found.
-    fn Astar(&self, from: Coord, to: Coord) -> u32 {
+    fn astar(&self, from: Coord, to: Coord) -> u32 {
         let mut openset = Vec::<Node>::new();
-        let mut cameFrom = HashMap::<Node, Node>::new();
+        let mut came_from = HashMap::<Node, Node>::new();
         let mut neighscores = HashMap::<Coord, u32>::new();
         let mut closedset = Vec::<Node>::new();
         let mut totrisk = 0;
@@ -155,7 +155,7 @@ impl Board {
                 totrisk += self.at(&to);
                 path.push((to, self.at(&to)));
                 loop {
-                    if let Some(par) = cameFrom.get(&cur) {
+                    if let Some(par) = came_from.get(&cur) {
                         totrisk += self.at(&par.c);
                         path.push((par.c, self.at(&par.c)));
                         if par.c == from {
@@ -175,16 +175,15 @@ impl Board {
 
                 for n in cn {
                     let newfs = current.fs + self.at(&n);
-                    if let seenscore = neighscores.entry(n).or_insert(newfs) {
-                        if newfs <= *seenscore {
-                            let child = Node::new(n, newfs, n.d(&to));
-                            cameFrom.insert(child, current);
-                            if openset.iter().any(|v| *v == child) {
-                                continue;
-                            }
-
-                            openset.push(child);
+                    let seenscore = neighscores.entry(n).or_insert(newfs);
+                    if newfs <= *seenscore {
+                        let child = Node::new(n, newfs, n.d(&to));
+                        came_from.insert(child, current);
+                        if openset.iter().any(|v| *v == child) {
+                            continue;
                         }
+
+                        openset.push(child);
                     }
                 }
             }
@@ -197,7 +196,6 @@ pub fn run() -> String {
     let mut ans = "".to_string();
     let inp = read_inp(15, false);
     let b = Board::from(&inp);
-    let mut line = 0;
     let start = Coord { x: 0, y: 0 };
     let end = Coord {
         x: b.dx - 1,
@@ -212,11 +210,11 @@ pub fn run() -> String {
     };
     ans.push_str(&format!(
         "[a] small board total cost {}\n",
-        b.Astar(start, end)
+        b.astar(start, end)
     ));
     ans.push_str(&format!(
         "[b] big board total cost {}\n",
-        bbig.Astar(startb, endb)
+        bbig.astar(startb, endb)
     ));
     ans
 }

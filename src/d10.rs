@@ -1,5 +1,5 @@
 use crate::read_inp;
-static pairs: [char; 8] = ['(', ')', '{', '}', '[', ']', '<', '>'];
+static PAIRS: [char; 8] = ['(', ')', '{', '}', '[', ']', '<', '>'];
 
 enum BraceType {
     Open,
@@ -12,9 +12,9 @@ enum LineType {
     Correct,
 }
 
-fn ch2BraceType(c: char) -> BraceType {
+fn ch_to_brace_type(c: char) -> BraceType {
     let mut btype = BraceType::Close;
-    for (ind, v) in pairs.iter().enumerate() {
+    for (ind, v) in PAIRS.iter().enumerate() {
         if *v == c && ind % 2 == 0 {
             btype = BraceType::Open;
             break;
@@ -27,13 +27,13 @@ fn ch2BraceType(c: char) -> BraceType {
     btype
 }
 
-fn ch2pair(c: char) -> char {
+fn ch_to_pair(c: char) -> char {
     let mut ret = 'x';
-    for (ind, v) in pairs.iter().enumerate() {
+    for (ind, v) in PAIRS.iter().enumerate() {
         if *v == c && ind % 2 == 0 {
-            ret = pairs[ind + 1];
+            ret = PAIRS[ind + 1];
         } else if *v == c && ind % 1 == 0 {
-            ret = pairs[ind - 1];
+            ret = PAIRS[ind - 1];
         }
     }
     ret
@@ -62,7 +62,7 @@ fn incompletescore(c: char) -> u64 {
 fn stack2score(s: &Vec<char>) -> u64 {
     let mut j = s.len() - 1;
     let mut score = 0;
-    while j >= 0 {
+    while j > 0 {
         score = score * 5;
         score += incompletescore(s[j]);
         if j > 0 {
@@ -82,7 +82,7 @@ fn linelint(l: &[char]) -> (u64, LineType) {
     let llen = l.len();
     let mut lscore = 0;
     let mut lt = LineType::Correct;
-    while stack.len() >= 0 {
+    while stack.len() > 0 {
         if stack.len() > 0 && i == llen {
             //println!("incomplete with score:{}", stack2score(&stack));
             lscore = stack2score(&stack);
@@ -95,8 +95,8 @@ fn linelint(l: &[char]) -> (u64, LineType) {
             lt = LineType::Correct;
             break;
         }
-        let pair = ch2pair(l[i]);
-        match ch2BraceType(l[i]) {
+        let pair = ch_to_pair(l[i]);
+        match ch_to_brace_type(l[i]) {
             BraceType::Open => {
                 // push l[i] into the stack
                 stack.push(l[i]);

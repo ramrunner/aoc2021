@@ -34,7 +34,6 @@ fn let_it_rain(
     max: (usize, usize),
 ) {
     lake.insert(p, true);
-    let mut curp = &p;
     let nvec = neighbor_indices(p.0, p.1, max.0, max.1);
     for n in nvec {
         if board[n.0][n.1] >= board[p.0][p.1] && board[n.0][n.1] < 9 && !lake.contains_key(&n) {
@@ -50,7 +49,7 @@ pub fn run() -> String {
     let mut board = Vec::<Vec<u32>>::new();
     let mut minima = Vec::<(usize, usize)>::new();
     let inp = read_inp(9, false);
-    for (li, l) in inp.lines().enumerate() {
+    for l in inp.lines() {
         let vline = l
             .chars()
             .map(|x| x.to_string().parse::<u32>().unwrap())
@@ -64,8 +63,7 @@ pub fn run() -> String {
     for j in 0..ysz {
         for i in 0..xsz {
             let nvec = neighbor_indices(j, i, xsz, ysz);
-            let mut res = false;
-            let minimum = nvec.iter().fold(true, |mut acc, x| {
+            let minimum = nvec.iter().fold(true, |acc, x| {
                 if board[x.0][x.1] <= board[j][i] {
                     acc && false
                 } else {

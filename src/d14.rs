@@ -17,11 +17,10 @@ fn pair_match(p: &str, rules: &HashMap<String, String>) -> String {
     }
 }
 
-fn merge_counts(a :&mut Frequencies, b: &Frequencies) {
+fn merge_counts(a: &mut Frequencies, b: &Frequencies) {
     for (k, v) in &b.f {
-            if let times = a.f.entry(*k).or_insert(0) {
-                *times += v;
-            }
+        let times = a.f.entry(*k).or_insert(0);
+        *times += v;
     }
 }
 
@@ -103,17 +102,8 @@ impl Frequencies {
     }
 
     fn reg(&mut self, a: char) {
-        if let times = self.f.entry(a).or_insert(0) {
-            *times += 1;
-        }
-    }
-
-    fn calc(&mut self, a: String) {
-        for c in a.chars() {
-            if let times = self.f.entry(c).or_insert(0) {
-                *times += 1;
-            }
-        }
+        let times = self.f.entry(a).or_insert(0);
+        *times += 1;
     }
 
     fn minmax(self) -> ((char, u64), (char, u64)) {
@@ -124,12 +114,6 @@ impl Frequencies {
         vec.sort_by(|a, b| a.1.cmp(&b.1));
         (vec[0], *vec.last().unwrap())
     }
-}
-
-fn freqCount(a: String) -> Frequencies {
-    let mut ret = Frequencies::new();
-    ret.calc(a);
-    ret
 }
 
 pub fn run() -> String {
@@ -152,10 +136,18 @@ pub fn run() -> String {
     let pattern1 = pattern.clone();
     let freqs = iterate_seq(10, pattern, &rules);
     let ans1 = freqs.minmax();
-    ret.push_str(&format!("[a] {:?} difference {}\n", ans1, ans1.1 .1 - ans1.0 .1));
+    ret.push_str(&format!(
+        "[a] {:?} difference {}\n",
+        ans1,
+        ans1.1 .1 - ans1.0 .1
+    ));
     let freqs1 = iterate_seq(40, pattern1, &rules);
     let ans2 = freqs1.minmax();
-    ret.push_str(&format!("[b] {:?} difference {}\n", ans2, ans2.1.1 - ans2.0.1));
+    ret.push_str(&format!(
+        "[b] {:?} difference {}\n",
+        ans2,
+        ans2.1 .1 - ans2.0 .1
+    ));
 
     ret
 }

@@ -50,7 +50,6 @@ fn infer_mapping(sigs: &str) -> [char; 7] {
     let mix1 = strs[0];
     let mix7 = strs[1];
     let mix4 = strs[2];
-    let mix8 = strs[9];
     // now we know the mapping for digit 1
     // we can also get a from being the top part of digit 7 not being in digit 1
     for c in mix7.chars() {
@@ -100,14 +99,11 @@ fn infer_mapping(sigs: &str) -> [char; 7] {
 
     //compare 0 and 9 , now that we know d, we will infer that e is the other one with freq1
     let mut mix0 = "";
-    let mut mix6 = "";
     let mut mix9 = "";
     for a in vec![strs[6], strs[7], strs[8]] {
         if !charin(a, mapping[3]) {
             mix0 = a;
-        } else if !charin(a, mapping[2]) {
-            mix6 = a;
-        } else {
+        } else if charin(a, mapping[2]) {
             mix9 = a;
         }
     }
@@ -170,7 +166,7 @@ pub fn run() -> String {
     let inp = read_inp(8, false);
     let lvec = inp.lines().collect::<Vec<&str>>();
     let mut acc0 = 0;
-    for (il, l) in lvec.iter().enumerate() {
+    for l in lvec.iter() {
         let part = l.split("|").collect::<Vec<_>>();
         let acc = part[1].split(" ").fold(0, |acc, x| {
             if x.len() == 3 || x.len() == 4 || x.len() == 7 || x.len() == 2 {
@@ -187,7 +183,7 @@ pub fn run() -> String {
     ));
 
     let mut sum: u32 = 0;
-    for (il, l) in lvec.iter().enumerate() {
+    for l in lvec.iter() {
         let part = l.split("|").collect::<Vec<_>>();
         let mp = infer_mapping(part[0].trim());
         let digstrs = part[1].trim().split(" ").collect::<Vec<_>>();
