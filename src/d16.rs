@@ -218,9 +218,6 @@ pub fn run() -> String {
         totres = lres.0.unwrap().result;
     }
     ans.push_str(&format!("[a] type sum of all packets {}\n", acc));
-    ans.push_str(&format!(
-        "[b] result of outer packet {}\n",
-        totres
-    ));
+    ans.push_str(&format!("[b] result of outer packet {}\n", totres));
     ans
 }
