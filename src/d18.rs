@@ -1,197 +1,213 @@
 use crate::read_inp;
-use std::fmt;
-use std::cmp::max;
 
+type SnailNum = Vec<(u8,u32)>;
 
-// to define a tree we use a recursive data struct
-// that requires Box<> to store data in the heap.
-#[derive(Debug, PartialEq, Clone)]
-enum BTree<T> {
-    Leaf(T),
-    Node(Box<BTree<T>>, Box<BTree<T>>),
+fn parse_numstring(a: &str) -> SnailNum {
+    let mut ret: SnailNum = Vec::new();
+    let mut d : u8 = 0;
+    for c in a.chars().collect::<Vec<_>>().iter() {
+        match c {
+            '[' => { d+=1; },
+            ']' => { d-=1; },
+            '0'..='9' => { 
+                let num = c.to_digit(10).unwrap();
+                ret.push((d, num));
+            },
+            _ => {},
+         }
+     }
+    ret
 }
 
-impl<T> BTree<T> {
-    fn new_node(l: BTree<T>, r: BTree<T>) -> BTree<T> {
-        BTree::Node(Box::new(l), Box::new(r))
-    }
+fn add(a: SnailNum, b: SnailNum) -> SnailNum {
+    let mut ret : SnailNum = a.to_vec();
+    let mut other = b.to_vec();
+    ret.append(&mut other);
+    ret.iter_mut().for_each(|(d,_)| *d += 1);
+    ret
+}
 
-    fn new_leaf(e: T) -> BTree<T> {
-        BTree::Leaf(e)
+fn splitat(a: &mut SnailNum, i: usize) {
+    let (d,val) = a[i];
+    let lval = val/2;
+    let mut rval = lval;
+    if val%2 == 1 {
+        rval += 1
     }
-    
-    // finds the max depth below a node
-    fn depth(&self) -> u32 {
-        match self {
-            BTree::Node(l,r) => max(l.depth(), r.depth()) + 1,
-            BTree::Leaf(_) => 1,
+    a[i] = (d+1, lval);
+    a.insert(i+1, (d+1, rval))
+}
+
+fn explodeat(a: &mut SnailNum, i: usize) {
+    if i > 0 {
+        a[i-1].1 += a[i].1
+    }
+    if a.len() > i+2 {
+        a[i+2].1 += a[i+1].1
+    }
+    // this will remove i and i+1 (vec changes)
+    //println!("removing {:?}", a[i]);
+    let (d,_) = a[i];
+    //println!("before rem {}:{:?}", i, a);
+    a.remove(i);
+   // println!("after rem:{:?}", a);
+    //println!("setting {:?} to 0", a[i]);
+    a[i] = (d-1,0);
+    //println!("after explode:{:?}", a);
+}
+
+fn reduce(a: &mut SnailNum) -> Option<&mut SnailNum> {
+    let mut doexplode = false;
+    let mut ati = 0;
+    let mut dosplit = false;
+    //let mut ret : SnailNum = Vec::new();
+    // scan ltr for any node at depth 4 and explode it
+    for (ind, elem) in a.iter().enumerate() {
+        ati = ind;
+        let (d,_) = elem;
+        if d >= &5 {
+            doexplode = true;
+            break
         }
     }
-}
-
-
-// implementing IntoIterator so that the tree
-// works on a for loop and returns its iterator
-impl<T> IntoIterator for BTree<T> {
-    type Item = T;
-    type IntoIter = BTreeIterator<T>;
-
-    fn into_iter(self) -> BTreeIterator<T> {
-        BTreeIterator::new(self)
-    }
-}
-
-// the actual iterator, has a vec to 
-// store everything to be iterated upon
-// on the left while recursing as much as
-// it can and doing the left node. This 
-// walks the tree in order.
-struct BTreeIterator<T> {
-    rnodes: Vec<BTree<T>>,
-    current: Option<T>,
-}
-
-impl<T> BTreeIterator<T> {
-    fn new(node: BTree<T>) -> BTreeIterator<T> {
-        let mut it = BTreeIterator {
-            rnodes: vec![],
-            current: None,
-        };
-        // traverse the left adding the right ones
-        it.do_left(node);
-        it
-    }
-
-    fn do_left(&mut self, mut nod: BTree<T>) {
-        // add the right branch
-        loop {
-            match nod {
-                BTree::Node(l,r) => {
-                    self.rnodes.push(*r);
-                    nod = *l;
-                },
-                BTree::Leaf(x) => {
-                    self.current = Some(x);
-                    break;
-                },
+    if !doexplode {
+        for (ind, elem) in a.iter().enumerate() {
+            ati = ind;
+            let (_,val) = elem;
+            if val > &9 {
+                dosplit = true;
+                break
             }
         }
     }
-}
-
-impl<T> Iterator for BTreeIterator<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        let res = self.current.take();
-
-        if let Some(node) = self.rnodes.pop() {
-            self.do_left(node)
-        }
-
-        res
+    if doexplode {
+        //println!("explode {:?} at {}", a, ati);
+        explodeat(a, ati);
     }
-}
 
-#[derive(Debug, PartialEq, Clone)]
-struct ValAction {
-    v: u32,
-    a: Vec<Action>,
-}
-
-struct SnailNum1 {
-    t: BTree<ValAction>
-}
-
-fn new_val_action(val: u32) -> ValAction {
-    ValAction {
-        v: val,
-        a: Vec::new(),
+    if dosplit {
+        //println!("split {:?} at {}", a, ati);
+        splitat(a, ati);
     }
-}
 
-#[derive(Debug, PartialEq, Clone)]
-enum Action {
-    Add(u32),
-    Remove(u32),
-    Split,
-    Delete,
-}
-
-
-// can be either expr,expr  | expr, num | num, expr | num, num
-fn parse_numstring1(a: &str) -> SnailNum1 {
-    let mut ret: SnailNum1;
-    ret = SnailNum1 {
-        t: BTree::new_leaf(new_val_action(9)),
-    };
-    let commaind = find_comma(a);
-    if commaind == 0 {
-        return ret;
+    if doexplode || dosplit {
+        return Some(a)
     }
-    let first = a.chars().nth(1).unwrap();
-    let aftercomma = a.chars().nth(commaind+1).unwrap();
-    match (first, aftercomma) {
-        ('0'..='9', '0'..='9') => {
-            //println!("taking 1");
-            let lval = first.to_digit(10).unwrap();
-            let l = BTree::new_leaf(new_val_action(lval));
-            let rval = aftercomma.to_digit(10).unwrap();
-            let r = BTree::new_leaf(new_val_action(rval));
-            ret.t = BTree::new_node(l,r);
-        },
-        ('[', '0'..='9') => {
-            //println!("taking 2");
-            let l = parse_numstring1(&a[1..commaind]);
-            let rval = aftercomma.to_digit(10).unwrap();
-            let r = BTree::new_leaf(new_val_action(rval));
-            ret.t = BTree::new_node(l.t, r);
-        },
-        ('0'..='9', '[') => {
-            //println!("taking 3");
-            let lval = first.to_digit(10).unwrap();
-            let l = BTree::new_leaf(new_val_action(lval));
-            let r = parse_numstring1(&a[commaind+1..]);
-            ret.t = BTree::new_node(l, r.t);
-        },
-        ('[','[') => {
-            //println!("taking 4");
-            let l = parse_numstring1(&a[1..commaind]);
-            let r = parse_numstring1(&a[commaind+1..]);
-            ret.t = BTree::new_node(l.t, r.t);
-        },
-        (_,_) => {
-            println!("wtf {}, {}", first, aftercomma);
-        }
+    None
+}
+
+fn getvals(a: &SnailNum) -> Vec<u32> {
+    let mut ret : Vec<u32> = vec![];
+    for (_, v) in a {
+        ret.push(*v) 
     }
     ret
 }
 
-// finds the next comma by balancing the number of left and
-// right parens
-fn find_comma(a: &str) -> usize {
-    let mut popen = 0;
-    for (ind, c) in a.chars().enumerate() {
-        match c {
-            '[' => popen += 1,
-            ']' => popen -= 1,
-            ',' => {
-                if popen == 1 {
-                    return ind;
-                }
-            },
-            _ => continue,
+fn all_reduce(a: &mut SnailNum) {
+    let mut cur = a;
+    loop {
+        if let Some(b) = reduce(cur) {
+            cur = b
+        } else {
+            break
         }
     }
-    0
+}
+
+// because snailfish nums are vectors and should be cloned
+// we implement this helper macro.
+macro_rules! add {
+    ($a:expr, $b:expr)=> {
+        {
+            add($a.to_vec(), $b.to_vec())
+        }
+    }
+}
+
+
+fn add_all_nums(a: &str) -> SnailNum {
+    let mut cur : SnailNum = vec![];
+    let lines = a.split("\n");
+    for l in lines {
+        let next = parse_numstring(&l);
+        if cur.len() == 0 {
+            cur = next;
+        } else {
+            //println!("{:?} + {:?}", cur, next);
+            cur = add!(cur, next);
+            //println!("pre reduce {:?}", getvals(&cur));
+            all_reduce(&mut cur);
+            //println!("apres reduce {:?}", getvals(&cur));
+        }
+    }
+    cur
+}
+
+fn add_all_pairs(a: &str) -> (u32, usize, usize) {
+    let lines = a.split("\n");
+    let mut max : (u32, usize, usize) = (0,0,0);
+    let mut alln : Vec<SnailNum> = vec![];
+    for l in lines.clone() {
+        let n1 = parse_numstring(&l);
+        alln.push(n1)
+    }
+    let nlen = alln.len();
+    for i in 0..nlen {
+        for j in 0..nlen {
+            if i == j {
+                continue
+            }
+            let n1 = &alln[i];
+            let n2 = &alln[j];
+            let mut an12 = add!(n1,n2);
+            let mut an21 = add!(n2,n1);
+            all_reduce(&mut an12);
+            all_reduce(&mut an21);
+            let m1 = mag(&an12);
+            let m2 = mag(&an21);
+            if m1 > m2 {
+                if m1 > max.0 {
+                    max = (m1, i, j);
+                } 
+            } else {
+                if m2 > max.0 {
+                    max = (m2, j, i);
+                }
+            }
+        }
+    }
+    max
+}
+
+fn mag(a: &SnailNum) -> u32 {
+    let mut c = a.to_vec();
+    fn recurse(a:&mut SnailNum, lvl: u8) -> u32 {
+        let mut tot;
+        if a.len() == 0 {
+            return 0;
+        }
+        if a[0].0 == lvl { // we're the pair of someone who called it
+            let val = a[0].1;
+            a.remove(0);
+            return val;
+        }
+        tot = 3*recurse(a, lvl+1);
+        tot += 2*recurse(a, lvl+1);
+        tot
+    }
+    recurse(&mut c,0)
 }
 
 pub fn run() -> String {
     let mut ans = "".to_string();
-    let inp = read_inp(18, true);
+    let inp = read_inp(18,false);
     let inpt = inp.trim();
-    let mut tree = parse_numstring(&inpt, 0, &inpt);
-    println!("final tree:{:?}", tree.t);
+    //let mut tree = parse_numstring(&inpt, 0, &inpt);
+    let res = add_all_nums(inpt);
+    let resval = getvals(&res);
+    ans.push_str(& format!("[a] final num {:?}, vals {:?}, mag:{:?}\n", res, resval, mag(&res)));
+    ans.push_str(& format!("[b] max {:?}\n", add_all_pairs(inpt)));
     //explode(&mut tree, 2);
     //println!("{}", tree);    
     ans
@@ -199,153 +215,56 @@ pub fn run() -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::d18::BTree;
-    use crate::d18::Action;
     use crate::d18::parse_numstring;
-    use crate::d18::parse_numstring1;
-    use crate::d18::new_val_action;
+    use crate::d18::SnailNum;
+    use crate::d18::add;
+    use crate::d18::all_reduce;
+    use crate::d18::getvals;
+    use crate::d18::mag;
 
-    fn testTreeStrings() -> (Vec<BTree<u32>>,Vec<&'static str>) {
-            let t1 = BTree::new_node(BTree::new_leaf(1), BTree::new_leaf(1));
-            let s1 = "[1,1]";
-            let t2 = BTree::new_node(
-                    BTree::new_node(BTree::new_leaf(1), BTree::new_leaf(2)),
-                    BTree::new_node(BTree::new_leaf(3), BTree::new_leaf(4)));
-            let s2 = "[[1,2],[3,4]]";
-            let t3 = BTree::new_node(
-                    BTree::new_leaf(1), 
-                    BTree::new_node(BTree::new_leaf(2), BTree::new_leaf(3)));
-            let s3 = "[1,[2,3]]";
-            let t4 = BTree::new_node(
-                    BTree::new_node(BTree::new_leaf(1), BTree::new_leaf(2)),
-                    BTree::new_leaf(3)); 
-            let s4 = "[[1,2],3]";
-            let tvec = vec![t1,t2,t3,t4];
-            let svec = vec![s1,s2,s3,s4];
-            (tvec, svec)
+    fn create_numstrings() -> (Vec<SnailNum>, Vec<&'static str>) {
+        let t1 : SnailNum = vec![(1,1),(1,1)];
+        let s1 = "[1,1]";
+        let t2 : SnailNum = vec![(2,1),(2,3), (3,2),(3,3)];
+        let s2 = "[[1,3],[[2,3]]]";
+
+        let tvec = vec![t1,t2];
+        let svec = vec![s1,s2];
+        (tvec,svec)
     }
 
-    fn builddepth(l:u32) -> BTree<u32> {
-        let mut ind = l;
-        let mut l = BTree::new_leaf(0);
-        let mut r = BTree::new_leaf(1);
-        let mut lc : BTree<u32>;
-        let mut rc : BTree<u32>;
-        let mut lc1 : BTree<u32>;
-        let mut rc1 : BTree<u32>;
-        while ind > 2 {
-            lc = l.clone();
-            rc = r.clone();
-            lc1 = l.clone();
-            rc1 = r.clone();
-            l = BTree::new_node(lc, rc);
-            r = BTree::new_node(lc1, rc1);
-            ind -= 1;
-        }
-        BTree::new_node(l,r)
-    }
 
     #[test]
     fn test_numstring() {
-            let (tvec, svec) = testTreeStrings();
-            let numvec = svec.iter().map(|x|{parse_numstring(x, 0, x).t}).collect::<Vec<_>>();
+            let (tvec, svec) = create_numstrings();
+            let numvec = svec.iter().map(|x|{parse_numstring(x)}).collect::<Vec<_>>();
 
             assert_eq!(tvec,numvec);
-     }
-
-    #[test]
-    fn depth() {
-        println!("{:?} => {}", builddepth(3), builddepth(3).depth());
-        assert_eq!(builddepth(3).depth(), 3);
-        assert_eq!(builddepth(4).depth(), 4);
-        assert_eq!(builddepth(2).depth(), 2);
     }
 
     #[test]
-    fn val_actions() {
-            let (tvec, svec) = testTreeStrings();
-            let numactionvec = svec.iter().map(|x|{parse_numstring1(x).t}).collect::<Vec<_>>();
-            println!("{:?}",numactionvec);
-            // add some actions to the first tree "[1,1]"
-            let mut ftree = BTree::new_node(
-                BTree::new_node(BTree::new_leaf(new_val_action(1)), BTree::new_leaf(new_val_action(2))), 
-                BTree::new_node(BTree::new_leaf(new_val_action(3)), BTree::new_leaf(new_val_action(4))));
-            for mut i in ftree {
-                println!("iter {:?}", i);
-                i.a.push(Action::Delete);
-            }
+    fn test_addnoreduce() {
+            let (tvec, _) = create_numstrings();
+            let newnum = add!(tvec[0], tvec[1]);
+            println!("added {:?} and {:?} gave {:?}", tvec[0], tvec[1], newnum);
+    }
 
-            for i in ftree {
-                println!("after iter {:?}", i);
-            }
+    #[test]
+    fn test_reduce() {
+        let ns = "[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]";
+        let ansvals = vec![0,7,4,7,8,6,0,8,1];
+        let mut num = parse_numstring(ns);
+        all_reduce(&mut num);
+        let vals = getvals(&num);
+
+        assert_eq!(vals, ansvals);
+    }
+
+    #[test]
+    fn test_mag() {
+        let nums = vec!["[9,1]","[1,9]","[[9,1],[1,9]]","[[1,2],[[3,4],5]]", "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", "[[[[1,1],[2,2]],[3,3]],[4,4]]"];
+        let pnums = nums.iter().map(|x| mag(&parse_numstring(x))).collect::<Vec<_>>();
+        println!("mags {:?}", pnums);
     }
 
 }
-
-/*
-
-struct SnailNum<'a> {
-    t: BTree<u32>,
-    pstr: &'a str,
-    istart: usize,
-    iend: usize,
-}
-
-
-
-// can be either expr,expr  | expr, num | num, expr | num, num
-fn parse_numstring<'a>(a: &'a str, istart: usize, pstr: &'a str) -> SnailNum<'a> {
-    let mut ret: SnailNum;
-    ret = SnailNum {
-        t: BTree::new_leaf(0),
-        pstr: "aaaa",
-        istart: 0,
-        iend: 0,
-    };
-    ret.pstr = pstr;
-    ret.istart = istart;
-    ret.iend = istart+a.len();
-    let commaind = find_comma(a);
-    if commaind == 0 {
-        return ret;
-    }
-    let first = a.chars().nth(1).unwrap();
-    //println!("commaind is {}", commaind);
-    let aftercomma = a.chars().nth(commaind+1).unwrap();
-    //println!("a:{}, is:{}, in parent str:{}", a, istart, &pstr[istart..ret.iend]);
-    match (first, aftercomma) {
-        ('0'..='9', '0'..='9') => {
-            //println!("taking 1");
-            let lval = first.to_digit(10).unwrap();
-            let l = BTree::new_leaf(lval);
-            let rval = aftercomma.to_digit(10).unwrap();
-            let r = BTree::new_leaf(rval);
-            ret.t = BTree::new_node(l,r);
-        },
-        ('[', '0'..='9') => {
-            //println!("taking 2");
-            let l = parse_numstring(&a[1..commaind], istart+1, pstr);
-            let rval = aftercomma.to_digit(10).unwrap();
-            let r = BTree::new_leaf(rval);
-            ret.t = BTree::new_node(l.t, r);
-        },
-        ('0'..='9', '[') => {
-            //println!("taking 3");
-            let lval = first.to_digit(10).unwrap();
-            let l = BTree::new_leaf(lval);
-            let r = parse_numstring(&a[commaind+1..], istart+commaind+1, pstr);
-            ret.t = BTree::new_node(l, r.t);
-        },
-        ('[','[') => {
-            //println!("taking 4");
-            let l = parse_numstring(&a[1..commaind], istart+1, pstr);
-            let r = parse_numstring(&a[commaind+1..], istart+commaind+1, pstr);
-            ret.t = BTree::new_node(l.t, r.t);
-        },
-        (_,_) => {
-            println!("wtf {}, {}", first, aftercomma);
-        }
-    }
-    ret
-}
-*/

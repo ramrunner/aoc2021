@@ -23,6 +23,7 @@ mod d7;
 mod d8;
 mod d9;
 
+
 pub struct Days {
     pub solution: [fn() -> String; 26],
 }
